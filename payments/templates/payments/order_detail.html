@@ -1,0 +1,78 @@
+{% extends "payments/base.html" %}
+
+{% block title %}Buy {{ order.title }}{% endblock %}
+
+{% block head %}
+  <script src="https://js.stripe.com/v3/"></script>
+{% endblock %}
+
+{% block content %}
+  <div class="layout">
+    <section class="panel stack">
+      <div>
+        <h1>{{ order.title }}</h1>
+        <p class="muted">Prepared bundle</p>
+      </div>
+
+      <div>
+        {% for order_item in order.order_items.all %}
+          <div class="row">
+            <span>{{ order_item.item.name }} x {{ order_item.quantity }}</span>
+            <strong>{{ order.currency|upper }} {{ order_item.item.price }}</strong>
+          </div>
+        {% endfor %}
+      </div>
+    </section>
+
+    <aside class="card stack">
+      <div>
+        <div class="row">
+          <span>Subtotal</span>
+          <strong>{{ order.currency|upper }} {{ totals.subtotal }}</strong>
+        </div>
+        <div class="row">
+          <span>Discount</span>
+          <strong>{{ order.currency|upper }} {{ totals.discount }}</strong>
+        </div>
+        <div class="row">
+          <span>Tax estimate</span>
+          <strong>{{ order.currency|upper }} {{ totals.tax }}</strong>
+        </div>
+        <div class="row">
+          <span>Total estimate</span>
+          <strong>{{ order.currency|upper }} {{ totals.total }}</strong>
+        </div>
+      </div>
+      <button class="button" id="buy-button" type="button">Buy order</button>
+      <div class="message" id="message" role="status" aria-live="polite"></div>
+    </aside>
+  </div>
+
+  <script>
+    const stripe = Stripe("{{ publishable_key|escapejs }}");
+    const buyButton = document.getElementById("buy-button");
+    const message = document.getElementById("message");
+
+    buyButton.addEventListener("click", async () => {
+      buyButton.disabled = true;
+      message.textContent = "";
+
+      try {
+        const response = await fetch("{% url 'payments:buy_order' order.pk %}", { method: "GET" });
+        const session = await response.json();
+
+        if (!response.ok) {
+          throw new Error(session.error || "Unable to create checkout session.");
+        }
+
+        const result = await stripe.redirectToCheckout({ sessionId: session.id });
+        if (result.error) {
+          throw new Error(result.error.message);
+        }
+      } catch (error) {
+        message.textContent = error.message;
+        buyButton.disabled = false;
+      }
+    });
+  </script>
+{% endblock %}

@@ -1,0 +1,51 @@
+{% extends "payments/base.html" %}
+
+{% block title %}Buy {{ item.name }}{% endblock %}
+
+{% block head %}
+  <script src="https://js.stripe.com/v3/"></script>
+{% endblock %}
+
+{% block content %}
+  <div class="layout">
+    <section class="panel">
+      <h1>{{ item.name }}</h1>
+      <p class="muted">{{ item.description }}</p>
+      <div class="price">{{ item.currency|upper }} {{ item.price }}</div>
+    </section>
+
+    <aside class="card stack">
+      <button class="button" id="buy-button" type="button">Buy</button>
+      <a class="button secondary" href="{% url 'payments:item_payment_intent_page' item.pk %}">Payment Intent</a>
+      <div class="message" id="message" role="status" aria-live="polite"></div>
+    </aside>
+  </div>
+
+  <script>
+    const stripe = Stripe("{{ publishable_key|escapejs }}");
+    const buyButton = document.getElementById("buy-button");
+    const message = document.getElementById("message");
+
+    buyButton.addEventListener("click", async () => {
+      buyButton.disabled = true;
+      message.textContent = "";
+
+      try {
+        const response = await fetch("{% url 'payments:buy_item' item.pk %}", { method: "GET" });
+        const session = await response.json();
+
+        if (!response.ok) {
+          throw new Error(session.error || "Unable to create checkout session.");
+        }
+
+        const result = await stripe.redirectToCheckout({ sessionId: session.id });
+        if (result.error) {
+          throw new Error(result.error.message);
+        }
+      } catch (error) {
+        message.textContent = error.message;
+        buyButton.disabled = false;
+      }
+    });
+  </script>
+{% endblock %}

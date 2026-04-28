@@ -1,0 +1,74 @@
+[
+  {
+    "model": "payments.item",
+    "pk": 1,
+    "fields": {
+      "name": "Django Hoodie",
+      "description": "Soft test-mode hoodie for the required /item/1 checkout flow.",
+      "price": "49.00",
+      "currency": "usd",
+      "created_at": "2026-01-01T00:00:00Z",
+      "updated_at": "2026-01-01T00:00:00Z"
+    }
+  },
+  {
+    "model": "payments.item",
+    "pk": 2,
+    "fields": {
+      "name": "API Mug",
+      "description": "A compact EUR item used to demonstrate currency-specific Stripe keypairs.",
+      "price": "18.50",
+      "currency": "eur",
+      "created_at": "2026-01-01T00:00:00Z",
+      "updated_at": "2026-01-01T00:00:00Z"
+    }
+  },
+  {
+    "model": "payments.discount",
+    "pk": 1,
+    "fields": {
+      "name": "Launch 10",
+      "percent_off": "10.00",
+      "amount_off": null,
+      "currency": "",
+      "active": true,
+      "stripe_coupon_ids": {},
+      "created_at": "2026-01-01T00:00:00Z",
+      "updated_at": "2026-01-01T00:00:00Z"
+    }
+  },
+  {
+    "model": "payments.tax",
+    "pk": 1,
+    "fields": {
+      "display_name": "Sales tax",
+      "percentage": "7.25",
+      "inclusive": false,
+      "active": true,
+      "stripe_tax_rate_ids": {},
+      "created_at": "2026-01-01T00:00:00Z",
+      "updated_at": "2026-01-01T00:00:00Z"
+    }
+  },
+  {
+    "model": "payments.order",
+    "pk": 1,
+    "fields": {
+      "title": "Starter bundle",
+      "currency": "usd",
+      "discount": 1,
+      "taxes": [1],
+      "created_at": "2026-01-01T00:00:00Z",
+      "updated_at": "2026-01-01T00:00:00Z"
+    }
+  },
+  {
+    "model": "payments.orderitem",
+    "pk": 1,
+    "fields": {
+      "order": 1,
+      "item": 1,
+      "quantity": 2
+    }
+  }
+]

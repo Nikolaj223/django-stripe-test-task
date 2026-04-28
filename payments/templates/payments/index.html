@@ -1,0 +1,46 @@
+{% extends "payments/base.html" %}
+
+{% block title %}Store{% endblock %}
+
+{% block content %}
+  <div class="stack">
+    <section>
+      <h1>Store</h1>
+      <p class="muted">Choose an item or prepared bundle.</p>
+    </section>
+
+    <section class="stack">
+      <h2>Items</h2>
+      <div class="grid">
+        {% for item in items %}
+          <a class="list-link" href="{% url 'payments:item_detail' item.pk %}">
+            <article class="card">
+              <h2>{{ item.name }}</h2>
+              <p class="muted">{{ item.description }}</p>
+              <div class="price">{{ item.currency|upper }} {{ item.price }}</div>
+            </article>
+          </a>
+        {% empty %}
+          <div class="panel">No items yet.</div>
+        {% endfor %}
+      </div>
+    </section>
+
+    <section class="stack">
+      <h2>Orders</h2>
+      <div class="grid">
+        {% for order in orders %}
+          <a class="list-link" href="{% url 'payments:order_detail' order.pk %}">
+            <article class="card">
+              <h2>{{ order.title }}</h2>
+              <p class="muted">{{ order.order_items.count }} line item(s)</p>
+              <div class="price">{{ order.currency|upper }}</div>
+            </article>
+          </a>
+        {% empty %}
+          <div class="panel">No orders yet.</div>
+        {% endfor %}
+      </div>
+    </section>
+  </div>
+{% endblock %}

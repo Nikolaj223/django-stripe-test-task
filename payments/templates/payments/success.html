@@ -1,0 +1,14 @@
+{% extends "payments/base.html" %}
+
+{% block title %}Payment complete{% endblock %}
+
+{% block content %}
+  <section class="panel stack">
+    <h1>Payment complete</h1>
+    <p class="muted">Stripe redirected back to the application successfully.</p>
+    {% if session_id %}
+      <p>Session: <strong>{{ session_id }}</strong></p>
+    {% endif %}
+    <a class="button" href="{% url 'payments:index' %}">Back to store</a>
+  </section>
+{% endblock %}

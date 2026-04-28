@@ -1,0 +1,70 @@
+{% extends "payments/base.html" %}
+
+{% block title %}Payment Intent: {{ item.name }}{% endblock %}
+
+{% block head %}
+  <script src="https://js.stripe.com/v3/"></script>
+{% endblock %}
+
+{% block content %}
+  <div class="layout">
+    <section class="panel">
+      <h1>{{ item.name }}</h1>
+      <p class="muted">{{ item.description }}</p>
+      <div class="price">{{ item.currency|upper }} {{ item.price }}</div>
+    </section>
+
+    <aside class="card stack">
+      <form id="payment-form" class="stack">
+        <div id="payment-element"></div>
+        <button class="button" id="submit" type="submit">Pay</button>
+        <div class="message" id="message" role="status" aria-live="polite"></div>
+      </form>
+    </aside>
+  </div>
+
+  <script>
+    const stripe = Stripe("{{ publishable_key|escapejs }}");
+    const form = document.getElementById("payment-form");
+    const submit = document.getElementById("submit");
+    const message = document.getElementById("message");
+
+    let elements;
+
+    async function initialize() {
+      const response = await fetch("{% url 'payments:item_payment_intent' item.pk %}", { method: "GET" });
+      const paymentIntent = await response.json();
+
+      if (!response.ok) {
+        throw new Error(paymentIntent.error || "Unable to create payment intent.");
+      }
+
+      elements = stripe.elements({ clientSecret: paymentIntent.client_secret });
+      const paymentElement = elements.create("payment");
+      paymentElement.mount("#payment-element");
+    }
+
+    initialize().catch((error) => {
+      message.textContent = error.message;
+      submit.disabled = true;
+    });
+
+    form.addEventListener("submit", async (event) => {
+      event.preventDefault();
+      submit.disabled = true;
+      message.textContent = "";
+
+      const result = await stripe.confirmPayment({
+        elements,
+        confirmParams: {
+          return_url: "{{ request.scheme }}://{{ request.get_host }}{% url 'payments:success' %}",
+        },
+      });
+
+      if (result.error) {
+        message.textContent = result.error.message;
+        submit.disabled = false;
+      }
+    });
+  </script>
+{% endblock %}
