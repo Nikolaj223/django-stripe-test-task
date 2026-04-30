@@ -1,33 +1,47 @@
-# Django Stripe Checkout test task
+# Django Stripe Store
 
-Реализация тестового задания: Django backend + Stripe Checkout для товаров, HTML-страница с кнопкой Buy, админка и бонусные сущности Order, Discount, Tax, currency-specific keypairs, Docker и отдельный PaymentIntent flow.
+Небольшой Django-сервис для оплаты товаров через Stripe Checkout. Основной сценарий ровно соответствует заданию: страница товара открывается по `/item/{id}`, кнопка Buy запрашивает `/buy/{id}`, backend создает `stripe.checkout.Session`, а браузер уходит на Stripe Checkout по `session.id`.
 
-## Что реализовано
+## Возможности
 
+- Товар `Item`: `name`, `description`, `price`, `currency`.
 - `GET /item/{id}` - HTML-страница товара с кнопкой Buy.
-- `GET /buy/{id}` - создает `stripe.checkout.Session` и возвращает JSON `{ "id": "cs_..." }`.
-- `GET /order/{id}` и `GET /buy/order/{id}` - оплата заказа из нескольких Items.
-- `Discount` подключается к Order как Stripe Coupon.
-- `Tax` подключается к Order как Stripe Tax Rate и передается в Checkout line items.
-- `Item.currency` и выбор Stripe keypair по валюте (`usd`, `eur`).
+- `GET /buy/{id}` - создание Stripe Checkout Session для товара.
+- Заказ `Order` с несколькими позициями через `OrderItem`.
+- Скидка `Discount` для заказа через Stripe Coupon.
+- Налог `Tax` для заказа через Stripe TaxRate.
+- Отдельные Stripe keypair для USD и EUR через environment variables.
 - Django Admin для всех моделей.
-- Docker/Docker Compose, env variables, idempotent demo bootstrap.
-- Render blueprint (`render.yaml`) and GitHub Actions CI.
-- Health endpoint for hosting checks: `GET /health/`.
-- Бонусный PaymentIntent API:
+- Docker, Docker Compose, Render blueprint и GitHub Actions CI.
+- Дополнительный PaymentIntent flow:
   - `GET /payment-intent/item/{id}`
   - `GET /payment-intent/order/{id}`
   - `GET /payment-intent/item/{id}/pay`
+- `GET /health/` для проверки деплоя.
 
-## Быстрый запуск через Docker
+## Структура
 
-1. Создайте `.env`:
+```text
+config/                         Django settings and URL root
+payments/models.py              Item, Order, OrderItem, Discount, Tax
+payments/services/              Stripe integration
+payments/pricing.py             Money conversion and order totals
+payments/selectors.py           Database access helpers
+payments/templates/payments/    HTML pages
+payments/management/commands/   Demo bootstrap command
+```
+
+Stripe-логика вынесена из views в `payments/services/stripe_checkout.py`; views только получают объекты, вызывают сервис и возвращают HTML/JSON.
+
+## Быстрый запуск
+
+Создайте `.env`:
 
 ```bash
 cp .env.example .env
 ```
 
-2. Впишите Stripe test keys:
+Укажите Stripe test keys:
 
 ```env
 STRIPE_SECRET_KEY=sk_test_...
@@ -38,29 +52,31 @@ STRIPE_SECRET_KEY_EUR=sk_test_...
 STRIPE_PUBLISHABLE_KEY_EUR=pk_test_...
 ```
 
-3. Запустите:
+Запустите Docker:
 
 ```bash
 docker compose up --build
 ```
 
-4. Откройте:
+После старта доступны:
 
-- Store: http://localhost:8000/
-- Required item page: http://localhost:8000/item/1
-- Required API: http://localhost:8000/buy/1
-- Order page: http://localhost:8000/order/1
-- Health: http://localhost:8000/health/
-- Admin: http://localhost:8000/admin/
+- http://localhost:8000/
+- http://localhost:8000/item/1
+- http://localhost:8000/buy/1
+- http://localhost:8000/order/1
+- http://localhost:8000/health/
+- http://localhost:8000/admin/
 
-Demo admin credentials from `.env.example`:
+Локальные admin credentials из `.env.example`:
 
 ```text
 login: admin
 password: admin12345
 ```
 
-## Локальный запуск без Docker
+## Запуск без Docker
+
+Linux/macOS:
 
 ```bash
 python -m venv .venv
@@ -94,49 +110,70 @@ python manage.py bootstrap_demo
 python manage.py runserver
 ```
 
-## API examples
+## API
 
 ```bash
-curl -X GET http://localhost:8000/item/1
-curl -X GET http://localhost:8000/buy/1
-curl -X GET http://localhost:8000/order/1
-curl -X GET http://localhost:8000/buy/order/1
-curl -X GET http://localhost:8000/payment-intent/item/1
-curl -X GET http://localhost:8000/health/
+curl http://localhost:8000/item/1
+curl http://localhost:8000/buy/1
+curl http://localhost:8000/order/1
+curl http://localhost:8000/buy/order/1
+curl http://localhost:8000/payment-intent/item/1
+curl http://localhost:8000/health/
 ```
 
-`/buy/{id}` intentionally returns the Checkout Session id for the task requirement. The response also includes `url` for easier debugging with newer Stripe-hosted Checkout flows.
+`/buy/{id}` возвращает JSON:
 
-## Stripe notes
+```json
+{
+  "id": "cs_test_...",
+  "url": "https://checkout.stripe.com/..."
+}
+```
 
-- Prices in the database are stored in major units (`49.00` USD). The service converts them to minor units before calling Stripe.
-- Stripe Coupons and Tax Rates are created lazily on the first order checkout and their ids are cached in `Discount.stripe_coupon_ids` and `Tax.stripe_tax_rate_ids`.
-- Stripe Checkout currently accepts one coupon per Checkout Session, so `Order` has one optional `discount`.
-- For test payments use Stripe card `4242 4242 4242 4242`, any future expiry date and any CVC.
+Frontend использует именно `id`: `stripe.redirectToCheckout({ sessionId: session.id })`.
 
-## Tests
+## Stripe
+
+- Цены хранятся в основных денежных единицах: `49.00`, `18.50`.
+- Перед отправкой в Stripe сумма конвертируется в minor units: cents для USD/EUR.
+- Coupons и TaxRates создаются лениво при первой оплате заказа и сохраняются в `stripe_coupon_ids` / `stripe_tax_rate_ids`.
+- Для тестовой оплаты можно использовать карту `4242 4242 4242 4242`, любую будущую дату и любой CVC.
+
+## Тесты
 
 ```bash
 python manage.py test
 ```
 
-or:
+или:
 
 ```bash
 pytest
 ```
 
-## Deployment checklist
+В тестах проверяются Checkout Session для товара, Order с Discount/Tax, PaymentIntent, mixed currency validation, HTML-страница товара и health endpoint.
 
-Set these environment variables on the server:
+## Деплой
+
+Минимальный набор environment variables:
 
 ```env
 DJANGO_SECRET_KEY=...
 DJANGO_DEBUG=0
 DJANGO_ALLOWED_HOSTS=your-domain.com
 DJANGO_CSRF_TRUSTED_ORIGINS=https://your-domain.com
+DJANGO_SECURE_SSL_REDIRECT=1
+DJANGO_SECURE_HSTS_SECONDS=31536000
+DJANGO_SECURE_HSTS_INCLUDE_SUBDOMAINS=1
+DJANGO_SECURE_HSTS_PRELOAD=1
+
 STRIPE_SECRET_KEY=sk_test_...
 STRIPE_PUBLISHABLE_KEY=pk_test_...
+STRIPE_SECRET_KEY_USD=sk_test_...
+STRIPE_PUBLISHABLE_KEY_USD=pk_test_...
+STRIPE_SECRET_KEY_EUR=sk_test_...
+STRIPE_PUBLISHABLE_KEY_EUR=pk_test_...
+
 DJANGO_LOAD_DEMO_DATA=1
 DJANGO_CREATE_SUPERUSER=1
 DJANGO_SUPERUSER_USERNAME=admin
@@ -144,7 +181,7 @@ DJANGO_SUPERUSER_EMAIL=admin@example.com
 DJANGO_SUPERUSER_PASSWORD=strong-review-password
 ```
 
-Then run:
+Команды для обычного server/runtime:
 
 ```bash
 python manage.py migrate --noinput
@@ -153,15 +190,21 @@ python manage.py collectstatic --noinput
 gunicorn config.wsgi:application --bind 0.0.0.0:$PORT
 ```
 
-For platforms with Docker support, deploy the provided `Dockerfile`; the entrypoint runs migrations, optional demo data load and optional superuser creation.
+Для Render можно использовать `render.yaml` или создать Web Service из Dockerfile. После деплоя проверьте:
 
-Render shortcut: create a Blueprint from this repository, set `DJANGO_ALLOWED_HOSTS`, `DJANGO_CSRF_TRUSTED_ORIGINS`, Stripe keys and admin credentials in the Render dashboard, then open `/item/1` and `/admin/`.
+- `/health/`
+- `/item/1`
+- `/admin/`
 
-## Submission checklist
+На Render домен из `RENDER_EXTERNAL_HOSTNAME` автоматически добавляется в `ALLOWED_HOSTS` и `CSRF_TRUSTED_ORIGINS`, поэтому вручную достаточно задать Stripe keys и admin credentials. `/health/` покажет `stripe.usd=true` и `stripe.eur=true` только когда вместо placeholder-значений указаны реальные Stripe test keys.
 
-- Public app URL: `https://<your-domain>/item/1`
-- Admin URL: `https://<your-domain>/admin/`
-- Admin credentials: provide the demo username and password from deployment env vars.
-- GitHub repository URL with this README.
-- Stripe test keys configured in hosting environment.
-- Smoke check before sending: `/health/` returns `{"status": "ok"}` and `/item/1` redirects to Stripe Checkout after clicking Buy.
+## Что отправить на проверку
+
+```text
+GitHub: https://github.com/Nikolaj223/django-stripe-test-task
+Demo: https://<domain>/item/1
+Admin: https://<domain>/admin/
+login: admin
+password: <password from deployment env>
+Health: https://<domain>/health/
+```

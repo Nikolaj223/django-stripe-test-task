@@ -13,6 +13,13 @@ class StripeConfigurationError(ImproperlyConfigured):
     pass
 
 
+def _is_placeholder_key(value: str | None) -> bool:
+    if not value:
+        return True
+    normalized = value.strip().lower()
+    return normalized in {"sk_test_xxx", "pk_test_xxx"} or "..." in normalized
+
+
 def _configure_app_info() -> None:
     app_info = getattr(settings, "STRIPE_APP_INFO", None)
     if app_info:
@@ -24,7 +31,7 @@ def get_keypair(currency: str) -> dict[str, str]:
     keypair = getattr(settings, "STRIPE_KEYPAIRS", {}).get(currency) or {}
     secret_key = keypair.get("secret_key")
     publishable_key = keypair.get("publishable_key")
-    if not secret_key:
+    if _is_placeholder_key(secret_key):
         raise StripeConfigurationError(f"Stripe secret key for {currency.upper()} is not configured.")
     return {"secret_key": secret_key, "publishable_key": publishable_key or ""}
 
@@ -32,7 +39,16 @@ def get_keypair(currency: str) -> dict[str, str]:
 def get_publishable_key(currency: str) -> str:
     currency = currency.lower()
     keypair = getattr(settings, "STRIPE_KEYPAIRS", {}).get(currency) or {}
-    return keypair.get("publishable_key", "")
+    publishable_key = keypair.get("publishable_key", "")
+    return "" if _is_placeholder_key(publishable_key) else publishable_key
+
+
+def is_keypair_ready(currency: str) -> bool:
+    currency = currency.lower()
+    keypair = getattr(settings, "STRIPE_KEYPAIRS", {}).get(currency) or {}
+    return not _is_placeholder_key(keypair.get("secret_key")) and not _is_placeholder_key(
+        keypair.get("publishable_key")
+    )
 
 
 def _success_url(request) -> str:

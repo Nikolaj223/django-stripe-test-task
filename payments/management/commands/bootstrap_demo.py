@@ -15,7 +15,7 @@ def env_bool(name: str, default: bool = False) -> bool:
 
 
 class Command(BaseCommand):
-    help = "Create idempotent demo data and an optional admin user for review."
+    help = "Seed sample store data and optionally create an admin user."
 
     def handle(self, *args, **options):
         if env_bool("DJANGO_LOAD_DEMO_DATA", False):
@@ -29,7 +29,7 @@ class Command(BaseCommand):
             pk=1,
             defaults={
                 "name": "Django Hoodie",
-                "description": "Soft test-mode hoodie for the required /item/1 checkout flow.",
+                "description": "Cotton hoodie with a clean Django print.",
                 "price": Decimal("49.00"),
                 "currency": "usd",
             },
@@ -38,7 +38,7 @@ class Command(BaseCommand):
             pk=2,
             defaults={
                 "name": "API Mug",
-                "description": "A compact EUR item used to demonstrate currency-specific Stripe keypairs.",
+                "description": "Ceramic mug for API coffee breaks.",
                 "price": Decimal("18.50"),
                 "currency": "eur",
             },

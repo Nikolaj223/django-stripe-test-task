@@ -4,9 +4,18 @@ services:
     env: docker
     plan: starter
     autoDeploy: false
+    healthCheckPath: /health/
     envVars:
       - key: DJANGO_DEBUG
         value: "0"
+      - key: DJANGO_SECURE_SSL_REDIRECT
+        value: "1"
+      - key: DJANGO_SECURE_HSTS_SECONDS
+        value: "31536000"
+      - key: DJANGO_SECURE_HSTS_INCLUDE_SUBDOMAINS
+        value: "1"
+      - key: DJANGO_SECURE_HSTS_PRELOAD
+        value: "1"
       - key: DJANGO_LOAD_DEMO_DATA
         value: "1"
       - key: DJANGO_CREATE_SUPERUSER
@@ -20,6 +29,14 @@ services:
       - key: STRIPE_SECRET_KEY
         sync: false
       - key: STRIPE_PUBLISHABLE_KEY
+        sync: false
+      - key: STRIPE_SECRET_KEY_USD
+        sync: false
+      - key: STRIPE_PUBLISHABLE_KEY_USD
+        sync: false
+      - key: STRIPE_SECRET_KEY_EUR
+        sync: false
+      - key: STRIPE_PUBLISHABLE_KEY_EUR
         sync: false
       - key: DJANGO_SUPERUSER_USERNAME
         sync: false

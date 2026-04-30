@@ -31,6 +31,14 @@ if not DEBUG and SECRET_KEY == "dev-only-insecure-secret-key":
 ALLOWED_HOSTS = env_list("DJANGO_ALLOWED_HOSTS", "localhost,127.0.0.1,0.0.0.0")
 CSRF_TRUSTED_ORIGINS = env_list("DJANGO_CSRF_TRUSTED_ORIGINS")
 
+render_external_hostname = os.getenv("RENDER_EXTERNAL_HOSTNAME")
+if render_external_hostname:
+    if render_external_hostname not in ALLOWED_HOSTS:
+        ALLOWED_HOSTS.append(render_external_hostname)
+    render_origin = f"https://{render_external_hostname}"
+    if render_origin not in CSRF_TRUSTED_ORIGINS:
+        CSRF_TRUSTED_ORIGINS.append(render_origin)
+
 
 INSTALLED_APPS = [
     "django.contrib.admin",
@@ -39,7 +47,7 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
-    "payments",
+    "payments.apps.PaymentsConfig",
 ]
 
 MIDDLEWARE = [
@@ -119,6 +127,10 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
 SESSION_COOKIE_SECURE = env_bool("DJANGO_SESSION_COOKIE_SECURE", not DEBUG)
 CSRF_COOKIE_SECURE = env_bool("DJANGO_CSRF_COOKIE_SECURE", not DEBUG)
+SECURE_SSL_REDIRECT = env_bool("DJANGO_SECURE_SSL_REDIRECT", not DEBUG)
+SECURE_HSTS_SECONDS = int(os.getenv("DJANGO_SECURE_HSTS_SECONDS", "31536000" if not DEBUG else "0"))
+SECURE_HSTS_INCLUDE_SUBDOMAINS = env_bool("DJANGO_SECURE_HSTS_INCLUDE_SUBDOMAINS", not DEBUG)
+SECURE_HSTS_PRELOAD = env_bool("DJANGO_SECURE_HSTS_PRELOAD", not DEBUG)
 
 STRIPE_KEYPAIRS = {
     "usd": {
@@ -132,7 +144,9 @@ STRIPE_KEYPAIRS = {
 }
 
 STRIPE_APP_INFO = {
-    "name": "django-stripe-test-task",
-    "version": "1.0.0",
-    "url": "https://github.com/",
+    "name": os.getenv("STRIPE_APP_NAME", "django-stripe-store"),
+    "version": os.getenv("STRIPE_APP_VERSION", "1.0.0"),
 }
+stripe_app_url = os.getenv("STRIPE_APP_URL")
+if stripe_app_url:
+    STRIPE_APP_INFO["url"] = stripe_app_url

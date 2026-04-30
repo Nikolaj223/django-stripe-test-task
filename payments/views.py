@@ -15,6 +15,7 @@ from .services.stripe_checkout import (
     create_order_checkout_session,
     create_order_payment_intent,
     get_publishable_key,
+    is_keypair_ready,
 )
 
 StripeError = getattr(stripe, "StripeError", None)
@@ -40,8 +41,8 @@ def health(request):
             "status": "ok",
             "database": "ok",
             "stripe": {
-                "usd": bool(get_publishable_key("usd")),
-                "eur": bool(get_publishable_key("eur")),
+                "usd": is_keypair_ready("usd"),
+                "eur": is_keypair_ready("eur"),
             },
         }
     )
