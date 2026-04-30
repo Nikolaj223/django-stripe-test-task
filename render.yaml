@@ -8,6 +8,8 @@ services:
     envVars:
       - key: DJANGO_DEBUG
         value: "0"
+      - key: PORT
+        value: "10000"
       - key: DJANGO_SECURE_SSL_REDIRECT
         value: "1"
       - key: DJANGO_SECURE_HSTS_SECONDS
