@@ -3,12 +3,22 @@
 {% block title %}Payment complete{% endblock %}
 
 {% block content %}
-  <section class="panel stack">
-    <h1>Payment complete</h1>
-    <p class="muted">Stripe redirected back to the application successfully.</p>
-    {% if session_id %}
-      <p>Session: <strong>{{ session_id }}</strong></p>
-    {% endif %}
-    <a class="button" href="{% url 'payments:index' %}">Back to store</a>
-  </section>
+  <div class="hero">
+    <section class="hero-copy">
+      <div class="eyebrow">Success</div>
+      <h1>Payment complete</h1>
+      <p class="muted">Stripe redirected back to the application successfully.</p>
+      {% if session_id %}
+        <p>Session: <strong>{{ session_id }}</strong></p>
+      {% endif %}
+    </section>
+
+    <aside class="checkout-card">
+      <div>
+        <div class="eyebrow">Receipt</div>
+        <h2>Test order captured</h2>
+      </div>
+      <a class="button" href="{% url 'payments:index' %}">Back to store</a>
+    </aside>
+  </div>
 {% endblock %}

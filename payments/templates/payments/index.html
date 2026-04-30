@@ -4,41 +4,73 @@
 
 {% block content %}
   <div class="stack">
-    <section>
-      <h1>Store</h1>
-      <p class="muted">Choose an item or prepared bundle.</p>
+    <section class="hero">
+      <div class="hero-copy">
+        <div class="eyebrow">Stripe test checkout</div>
+        <h1>Store</h1>
+        <p class="muted">Pick a piece, pay in test mode, return cleanly.</p>
+        <div class="badge-row">
+          <span class="badge">USD / EUR</span>
+          <span class="badge">Checkout</span>
+          <span class="badge">Payment Intent</span>
+        </div>
+      </div>
+
+      <aside class="hero-ticket">
+        <div class="ticket-top">
+          <span>Demo receipt</span>
+          <span>Ready</span>
+        </div>
+        <div class="ticket-body">
+          <h2>Items and bundles</h2>
+          <p class="muted">Curated sample data is loaded for quick review.</p>
+          <div class="mini-price">Test mode</div>
+        </div>
+      </aside>
     </section>
 
     <section class="stack">
-      <h2>Items</h2>
+      <div class="section-title">
+        <h2>Items</h2>
+      </div>
       <div class="grid">
         {% for item in items %}
           <a class="list-link" href="{% url 'payments:item_detail' item.pk %}">
             <article class="card">
-              <h2>{{ item.name }}</h2>
-              <p class="muted">{{ item.description }}</p>
-              <div class="price">{{ item.currency|upper }} {{ item.price }}</div>
+              <div class="product-art {% if 'Mug' in item.name %}mug{% else %}hoodie{% endif %}" aria-hidden="true"></div>
+              <div class="card-body">
+                <div class="eyebrow">{{ item.currency|upper }}</div>
+                <h2>{{ item.name }}</h2>
+                <p class="muted">{{ item.description }}</p>
+                <div class="mini-price">{{ item.currency|upper }} {{ item.price }}</div>
+              </div>
             </article>
           </a>
         {% empty %}
-          <div class="panel">No items yet.</div>
+          <div class="empty-state">No items yet.</div>
         {% endfor %}
       </div>
     </section>
 
     <section class="stack">
-      <h2>Orders</h2>
+      <div class="section-title">
+        <h2>Orders</h2>
+      </div>
       <div class="grid">
         {% for order in orders %}
           <a class="list-link" href="{% url 'payments:order_detail' order.pk %}">
             <article class="card">
-              <h2>{{ order.title }}</h2>
-              <p class="muted">{{ order.order_items.count }} line item(s)</p>
-              <div class="price">{{ order.currency|upper }}</div>
+              <div class="product-art bundle" aria-hidden="true"></div>
+              <div class="card-body">
+                <div class="eyebrow">{{ order.currency|upper }} bundle</div>
+                <h2>{{ order.title }}</h2>
+                <p class="muted">{{ order.order_items.count }} line item(s)</p>
+                <div class="mini-price">{{ order.currency|upper }}</div>
+              </div>
             </article>
           </a>
         {% empty %}
-          <div class="panel">No orders yet.</div>
+          <div class="empty-state">No orders yet.</div>
         {% endfor %}
       </div>
     </section>

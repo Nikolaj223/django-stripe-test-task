@@ -8,13 +8,21 @@
 
 {% block content %}
   <div class="layout">
-    <section class="panel">
-      <h1>{{ item.name }}</h1>
-      <p class="muted">{{ item.description }}</p>
-      <div class="price">{{ item.currency|upper }} {{ item.price }}</div>
+    <section class="stack">
+      <div class="product-art detail-art {% if 'Mug' in item.name %}mug{% else %}hoodie{% endif %}" aria-hidden="true"></div>
+      <div class="panel">
+        <div class="eyebrow">{{ item.currency|upper }} item</div>
+        <h1>{{ item.name }}</h1>
+        <p class="muted">{{ item.description }}</p>
+        <div class="price">{{ item.currency|upper }} {{ item.price }}</div>
+      </div>
     </section>
 
-    <aside class="card stack">
+    <aside class="checkout-card">
+      <div>
+        <div class="eyebrow">Checkout</div>
+        <h2>Stripe hosted payment</h2>
+      </div>
       <button class="button" id="buy-button" type="button">Buy</button>
       <a class="button secondary" href="{% url 'payments:item_payment_intent_page' item.pk %}">Payment Intent</a>
       <div class="message" id="message" role="status" aria-live="polite"></div>

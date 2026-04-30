@@ -10,9 +10,12 @@
   <div class="layout">
     <section class="panel stack">
       <div>
+        <div class="eyebrow">{{ order.currency|upper }} bundle</div>
         <h1>{{ order.title }}</h1>
-        <p class="muted">Prepared bundle</p>
+        <p class="muted">Prepared bundle with Stripe coupon and tax support.</p>
       </div>
+
+      <div class="product-art detail-art bundle" aria-hidden="true"></div>
 
       <div>
         {% for order_item in order.order_items.all %}
@@ -24,7 +27,11 @@
       </div>
     </section>
 
-    <aside class="card stack">
+    <aside class="checkout-card">
+      <div>
+        <div class="eyebrow">Order checkout</div>
+        <h2>Receipt preview</h2>
+      </div>
       <div>
         <div class="row">
           <span>Subtotal</span>

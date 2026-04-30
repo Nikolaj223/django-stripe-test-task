@@ -8,13 +8,21 @@
 
 {% block content %}
   <div class="layout">
-    <section class="panel">
-      <h1>{{ item.name }}</h1>
-      <p class="muted">{{ item.description }}</p>
-      <div class="price">{{ item.currency|upper }} {{ item.price }}</div>
+    <section class="stack">
+      <div class="product-art detail-art {% if 'Mug' in item.name %}mug{% else %}hoodie{% endif %}" aria-hidden="true"></div>
+      <div class="panel">
+        <div class="eyebrow">Payment Intent</div>
+        <h1>{{ item.name }}</h1>
+        <p class="muted">{{ item.description }}</p>
+        <div class="price">{{ item.currency|upper }} {{ item.price }}</div>
+      </div>
     </section>
 
-    <aside class="card stack">
+    <aside class="checkout-card">
+      <div>
+        <div class="eyebrow">Embedded form</div>
+        <h2>Card payment</h2>
+      </div>
       <form id="payment-form" class="stack">
         <div id="payment-element"></div>
         <button class="button" id="submit" type="submit">Pay</button>
